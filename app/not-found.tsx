@@ -18,16 +18,10 @@ export default function NotFoundPage() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
-              className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-950 bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5"
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-950 bg-slate-950 px-5 py-3 text-sm font-semibold !text-white transition hover:-translate-y-0.5"
               href="/"
             >
               Retour a l&apos;accueil
-            </Link>
-            <Link
-              className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50"
-              href="/projects"
-            >
-              Aller aux projets
             </Link>
           </div>
         </div>

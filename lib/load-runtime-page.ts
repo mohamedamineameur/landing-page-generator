@@ -1,10 +1,12 @@
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { CURRENT_PROJECT_COOKIE_NAME } from "@/lib/project-selection";
 import { getCurrentWorkspacePage, getDefaultRuntimePage, getWorkspaceForUser } from "@/lib/workspace";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 async function getAuthenticatedWorkspaceContext() {
-  const requestHeaders = await headers();
-  const authenticatedUserId = requestHeaders.get("x-auth-user-id");
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.auth.getUser();
+  const authenticatedUserId = data.user?.id ?? null;
 
   if (!authenticatedUserId) {
     return null;

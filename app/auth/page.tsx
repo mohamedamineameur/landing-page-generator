@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useAuth } from "@/components/auth-provider";
+import { useAvailability } from "@/lib/use-availability";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 function cx(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(" ");
@@ -18,6 +20,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const usernameAvailability = useAvailability({ kind: "username", value: username });
   const nextPath = useMemo(() => searchParams.get("next") || "/projects", [searchParams]);
   const redirectPath = useMemo(() => {
     if (!user) {
@@ -54,6 +57,22 @@ export default function AuthPage() {
     }
   }
 
+  async function signInWithGoogle() {
+    setError(null);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+        },
+      });
+      if (error) throw error;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Impossible de se connecter avec Google.");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.12),transparent_24%),linear-gradient(180deg,#f8fafc_0%,#ffffff_100%)] px-4 py-10">
       <div className="mx-auto grid min-h-[calc(100vh-80px)] w-full max-w-5xl items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
@@ -62,14 +81,14 @@ export default function AuthPage() {
             className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50"
             href="/"
           >
-            Retour a l'accueil
+            Retour a l&apos;accueil
           </Link>
           <div className="space-y-4">
             <span className="inline-flex rounded-full bg-slate-950 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-white">
-              Capturia Workspace
+              Funnel Workspace
             </span>
             <h1 className="text-4xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl">
-              Connecte-toi pour proteger ton espace d'edition
+              Connecte-toi pour proteger ton espace d&apos;edition
             </h1>
             <p className="max-w-xl text-base leading-7 text-slate-600">
               Chaque utilisateur travaille maintenant sur ses propres projets et son propre historique de pages.
@@ -101,7 +120,23 @@ export default function AuthPage() {
             </button>
           </div>
 
-          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <div className="mt-6 space-y-4">
+            <button
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={loading || submitting}
+              onClick={() => void signInWithGoogle()}
+              type="button"
+            >
+              Continuer avec Google
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-slate-200" />
+              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">ou</span>
+              <div className="h-px flex-1 bg-slate-200" />
+            </div>
+
+            <form className="space-y-4" onSubmit={handleSubmit}>
             <label className="grid gap-2">
               <span className="text-sm font-semibold text-slate-800">Username</span>
               <input
@@ -113,6 +148,30 @@ export default function AuthPage() {
                 value={username}
               />
             </label>
+
+            {mode === "register" && username.trim() ? (
+              <div
+                className={
+                  usernameAvailability.status === "available"
+                    ? "rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+                    : usernameAvailability.status === "unavailable"
+                      ? "rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+                      : usernameAvailability.status === "error"
+                        ? "rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+                        : "rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600"
+                }
+              >
+                {usernameAvailability.status === "checking"
+                  ? "Verification du username..."
+                  : usernameAvailability.status === "available"
+                    ? "Username disponible."
+                    : usernameAvailability.status === "unavailable"
+                      ? "Ce username est deja pris."
+                      : usernameAvailability.status === "error"
+                        ? usernameAvailability.message
+                        : null}
+              </div>
+            ) : null}
 
             <label className="grid gap-2">
               <span className="text-sm font-semibold text-slate-800">Mot de passe</span>
@@ -135,7 +194,12 @@ export default function AuthPage() {
 
             <button
               className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[linear-gradient(135deg,#0f172a,#2563eb)] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_34px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
-              disabled={loading || submitting}
+              disabled={
+                loading ||
+                submitting ||
+                (mode === "register" &&
+                  (usernameAvailability.status === "checking" || usernameAvailability.status === "unavailable"))
+              }
               type="submit"
             >
               {submitting
@@ -144,7 +208,8 @@ export default function AuthPage() {
                   ? "Se connecter"
                   : "Creer mon compte"}
             </button>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     </div>

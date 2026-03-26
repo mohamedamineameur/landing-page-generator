@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/auth";
 import { isUuid, jsonError } from "@/lib/api-utils";
-import { getModels, syncDatabase } from "@/lib/models";
-import { findOwnedPage } from "@/lib/ownership";
-import { getSequelize } from "@/lib/sequelize";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -27,34 +25,49 @@ export async function POST(_request: Request, context: RouteContext) {
       return jsonError("Le pageId doit etre un UUID valide.");
     }
 
-    await syncDatabase();
-    const { Page } = getModels();
-    const effectivePage = await getSequelize().transaction(async (transaction) => {
-      const page = await findOwnedPage(auth.user.userId, pageId, { transaction });
+    const supabase = await createSupabaseServerClient();
+    const { data: page, error: pageError } = await supabase
+      .from("pages")
+      .select("id, project_id, is_effective, payload, created_at")
+      .eq("id", pageId)
+      .maybeSingle();
 
-      if (!page) {
-        return null;
-      }
+    if (pageError) {
+      return jsonError(pageError.message, 500);
+    }
 
-      await Page.update(
-        { isEffective: false },
-        {
-          where: { projectId: page.projectId },
-          transaction,
-        },
-      );
-
-      page.isEffective = true;
-      await page.save({ transaction });
-
-      return page;
-    });
-
-    if (!effectivePage) {
+    if (!page) {
       return jsonError("Page introuvable.", 404);
     }
 
-    return NextResponse.json(effectivePage);
+    const { error: disableError } = await supabase
+      .from("pages")
+      .update({ is_effective: false })
+      .eq("project_id", page.project_id)
+      .eq("is_effective", true);
+
+    if (disableError) {
+      return jsonError(disableError.message, 500);
+    }
+
+    const { data: effectivePage, error: updateError } = await supabase
+      .from("pages")
+      .update({ is_effective: true })
+      .eq("id", page.id)
+      .select("id, project_id, is_effective, payload, created_at")
+      .single();
+
+    if (updateError) {
+      return jsonError(updateError.message, 500);
+    }
+
+    return NextResponse.json({
+      id: effectivePage.id,
+      projectId: effectivePage.project_id,
+      isEffective: effectivePage.is_effective,
+      payload: effectivePage.payload,
+      createdAt: effectivePage.created_at,
+    });
   } catch (error) {
     return jsonError(
       error instanceof Error ? error.message : "Impossible de rendre cette page effective.",

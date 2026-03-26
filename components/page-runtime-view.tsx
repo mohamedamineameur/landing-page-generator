@@ -17,6 +17,15 @@ interface PageTheme {
   buttonTextColor?: string;
   successColor?: string;
   warningColor?: string;
+  palette?: {
+    primary?: string;
+    secondary?: string;
+    background?: string;
+    textPrimary?: string;
+    textSecondary?: string;
+    accent?: string;
+    muted?: string;
+  };
 }
 
 export interface RuntimePageLocalization {

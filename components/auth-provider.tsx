@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { RuntimePagePayload } from "@/components/page-runtime-view";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 interface AuthUser {
   id: string;
@@ -39,6 +40,13 @@ interface AuthContextValue extends WorkspaceState {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function usernameToEmail(username: string) {
+  const normalized = username.trim().toLowerCase();
+  if (!normalized) return "";
+  if (normalized.includes("@")) return normalized;
+  return `${normalized}@capturia.dev`;
+}
 
 async function requestJson<T>(input: RequestInfo | URL, init?: RequestInit) {
   const response = await fetch(input, {
@@ -95,16 +103,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      void refreshWorkspace();
+    });
+
     void refreshWorkspace();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [refreshWorkspace]);
 
   const login = useCallback(
     async (payload: { username: string; password: string }) => {
-      await requestJson("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify(payload),
+      const supabase = createSupabaseBrowserClient();
+      const email = usernameToEmail(payload.username);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password: payload.password,
       });
-
+      if (error) {
+        throw new Error(error.message);
+      }
       await refreshWorkspace();
     },
     [refreshWorkspace],
@@ -112,21 +136,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(
     async (payload: { username: string; password: string }) => {
-      await requestJson("/api/users", {
-        method: "POST",
-        body: JSON.stringify(payload),
+      const supabase = createSupabaseBrowserClient();
+      const email = usernameToEmail(payload.username);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password: payload.password,
+        options: {
+          data: {
+            username: payload.username.trim(),
+          },
+        },
       });
-
+      if (error) {
+        throw new Error(error.message);
+      }
       await refreshWorkspace();
     },
     [refreshWorkspace],
   );
 
   const logout = useCallback(async () => {
-    await requestJson("/api/auth/logout", {
-      method: "POST",
-      body: JSON.stringify({}),
-    });
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
 
     setWorkspace({
       user: null,
@@ -163,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshWorkspace,
       selectProject,
     }),
-    [loading, login, logout, refreshWorkspace, selectProject, workspace],
+    [loading, login, register, logout, refreshWorkspace, selectProject, workspace],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/auth";
 import { isRecord, isUuid, jsonError, sanitizePayload } from "@/lib/api-utils";
-import { getModels, syncDatabase } from "@/lib/models";
-import {
-  findOwnedProject,
-  listOwnedPagesForProject,
-} from "@/lib/ownership";
-import { getSequelize } from "@/lib/sequelize";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -30,16 +25,41 @@ export async function GET(_request: Request, context: RouteContext) {
       return jsonError("Le projectId doit etre un UUID valide.");
     }
 
-    await syncDatabase();
-    const project = await findOwnedProject(auth.user.userId, projectId);
+    const supabase = await createSupabaseServerClient();
+    const { data: project, error: projectError } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("id", projectId)
+      .maybeSingle();
+
+    if (projectError) {
+      return jsonError(projectError.message, 500);
+    }
 
     if (!project) {
       return jsonError("Projet introuvable.", 404);
     }
 
-    const pages = await listOwnedPagesForProject(auth.user.userId, projectId);
+    const { data: pages, error } = await supabase
+      .from("pages")
+      .select("id, project_id, is_effective, payload, created_at")
+      .eq("project_id", projectId)
+      .order("is_effective", { ascending: false })
+      .order("created_at", { ascending: false });
 
-    return NextResponse.json(pages);
+    if (error) {
+      return jsonError(error.message, 500);
+    }
+
+    return NextResponse.json(
+      (pages ?? []).map((page) => ({
+        id: page.id,
+        projectId: page.project_id,
+        isEffective: page.is_effective,
+        payload: page.payload,
+        createdAt: page.created_at,
+      })),
+    );
   } catch (error) {
     return jsonError(
       error instanceof Error ? error.message : "Impossible de lister l'historique des pages.",
@@ -75,40 +95,58 @@ export async function POST(request: Request, context: RouteContext) {
       return jsonError("Le payload est requis et doit etre un JSON valide.");
     }
 
-    await syncDatabase();
-    const { Page } = getModels();
-    const page = await getSequelize().transaction(async (transaction) => {
-      const project = await findOwnedProject(auth.user.userId, projectId, { transaction });
+    const supabase = await createSupabaseServerClient();
 
-      if (!project) {
-        return null;
-      }
+    const { data: project, error: projectError } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("id", projectId)
+      .maybeSingle();
 
-      if (isEffective) {
-        await Page.update(
-          { isEffective: false },
-          {
-            where: { projectId },
-            transaction,
-          },
-        );
-      }
+    if (projectError) {
+      return jsonError(projectError.message, 500);
+    }
 
-      return Page.create(
-        {
-          projectId,
-          payload,
-          isEffective,
-        },
-        { transaction },
-      );
-    });
-
-    if (!page) {
+    if (!project) {
       return jsonError("Projet introuvable.", 404);
     }
 
-    return NextResponse.json(page, { status: 201 });
+    if (isEffective) {
+      const { error: disableError } = await supabase
+        .from("pages")
+        .update({ is_effective: false })
+        .eq("project_id", projectId)
+        .eq("is_effective", true);
+
+      if (disableError) {
+        return jsonError(disableError.message, 500);
+      }
+    }
+
+    const { data: page, error: insertError } = await supabase
+      .from("pages")
+      .insert({
+        project_id: projectId,
+        payload,
+        is_effective: isEffective,
+      })
+      .select("id, project_id, is_effective, payload, created_at")
+      .single();
+
+    if (insertError) {
+      return jsonError(insertError.message, 500);
+    }
+
+    return NextResponse.json(
+      {
+        id: page.id,
+        projectId: page.project_id,
+        isEffective: page.is_effective,
+        payload: page.payload,
+        createdAt: page.created_at,
+      },
+      { status: 201 },
+    );
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Impossible de creer la page.", 500);
   }

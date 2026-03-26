@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOptionalAuthenticatedUser } from "@/lib/auth";
-import { getModels, syncDatabase } from "@/lib/models";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -11,20 +11,22 @@ export async function GET() {
     return NextResponse.json({ user: null }, { status: 200 });
   }
 
-  await syncDatabase();
-  const { User } = getModels();
+  const supabase = await createSupabaseServerClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, username, created_at")
+    .eq("id", auth.user.userId)
+    .maybeSingle();
 
-  const user = await User.findByPk(auth.user.userId);
-
-  if (!user) {
+  if (!profile) {
     return NextResponse.json({ user: null }, { status: 200 });
   }
 
   return NextResponse.json({
     user: {
-      id: user.id,
-      username: user.username,
-      createdAt: user.createdAt,
+      id: profile.id,
+      username: profile.username,
+      createdAt: profile.created_at,
     },
   });
 }

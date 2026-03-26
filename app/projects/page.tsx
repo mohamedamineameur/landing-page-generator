@@ -70,10 +70,10 @@ export default function ProjectsPage() {
               Mes projets
             </span>
             <h1 className="mt-4 text-4xl font-black tracking-[-0.04em] text-slate-950">
-              Choisis d'abord ton projet
+              Choisis d&apos;abord ton projet
             </h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
-              Clique sur un projet pour voir son historique de pages et ouvrir ensuite l'edition ou la generation.
+              Clique sur un projet pour voir son historique de pages et ouvrir ensuite l&apos;edition ou la generation.
             </p>
 
             <div className="mt-8 grid gap-4">
@@ -157,7 +157,7 @@ export default function ProjectsPage() {
               <div className="mt-4 grid gap-3 text-sm leading-6 text-slate-600">
                 <p>1. Choisis un projet.</p>
                 <p>2. Ouvre son historique de pages.</p>
-                <p>3. Depuis ce projet, lance ensuite le dashboard, le prompt ou l'edition.</p>
+                <p>3. Depuis ce projet, lance ensuite le dashboard, le prompt ou l&apos;edition.</p>
               </div>
               {currentProject ? (
                 <Link

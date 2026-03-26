@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { PageRuntimeView } from "@/components/page-runtime-view";
-import { isUuid } from "@/lib/api-utils";
-import { getModels, syncDatabase } from "@/lib/models";
-import { normalizePagePayloadForRuntime } from "@/lib/page-dsl";
+import { normalizePagePayloadForRuntime, validatePagePayload } from "@/lib/page-dsl";
+import { normalizeProjectName } from "@/lib/project-name";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -12,53 +12,58 @@ type RouteContext = {
   }>;
 };
 
-function toProjectSlug(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
 export default async function ViewPageByIdPage(context: RouteContext) {
-  const { pageId } = await context.params;
+  const { pageId: rawProjectSlug } = await context.params;
+  const projectSlug = normalizeProjectName(rawProjectSlug);
 
-  await syncDatabase();
-  const { Page, Project } = getModels();
-  let page = null;
-
-  if (isUuid(pageId)) {
-    page = await Page.findByPk(pageId);
-  } else {
-    const projects = await Project.findAll();
-    const matchingProject = projects.find((project) => toProjectSlug(project.name) === pageId);
-
-    if (matchingProject) {
-      page = await Page.findOne({
-        where: {
-          projectId: matchingProject.id,
-          isEffective: true,
-        },
-        order: [["createdAt", "DESC"]],
-      });
-    }
-  }
-
-  if (!page) {
+  if (!projectSlug) {
     notFound();
   }
 
-  const runtimePage = normalizePagePayloadForRuntime(page.payload);
+  const supabase = await createSupabaseServerClient();
+  const { data: projects, error: projectError } = await supabase
+    .from("projects")
+    .select("id, name, created_at")
+    .eq("name", projectSlug)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (projectError || !projects || projects.length === 0) {
+    notFound();
+  }
+
+  const project = projects[0];
+
+  const { data: page, error: pageError } = await supabase
+    .from("pages")
+    .select("id, project_id, payload, is_effective")
+    .eq("project_id", project.id)
+    .eq("is_effective", true)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (pageError || !page) {
+    notFound();
+  }
+
+  const normalized = normalizePagePayloadForRuntime(page.payload);
+  const validation = validatePagePayload(normalized);
+
+  if (!validation.success) {
+    notFound();
+  }
+
+  const runtimePage = validation.data;
 
   console.log(
     "[view-page] payload",
     JSON.stringify(
       {
-        pageId,
+        projectSlug,
+        resolvedProjectId: project.id,
         resolvedPageId: page.id,
-        projectId: page.projectId,
+        projectId: page.project_id,
         payload: runtimePage,
       },
       null,

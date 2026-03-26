@@ -1,5 +1,12 @@
 .next/
 node_modules/
+.npm-cache/
+.build.log
+.env
+.env.*
+
+.next/
+node_modules/
 coverage/
 dist/
 build/

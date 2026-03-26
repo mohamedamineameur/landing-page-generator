@@ -339,7 +339,7 @@ export function PageInlineEditorModal() {
                     />
                   </label>
                   <p className="text-[13px] text-slate-500">
-                    PNG, JPG, WEBP ou GIF. L'image sera ajoutee a la galerie ci-dessous.
+                    PNG, JPG, WEBP ou GIF. L&apos;image sera ajoutee a la galerie ci-dessous.
                   </p>
                 </div>
               ) : null}
@@ -414,7 +414,7 @@ export function PageInlineEditorModal() {
 
             {saveError ? (
               <div className={cx("border border-red-200 bg-[linear-gradient(180deg,#fff1f2_0%,#fff7f7_100%)] px-4 py-4 text-sm text-red-700 shadow-sm", isImageField ? "rounded-[16px]" : "rounded-[22px]")}>
-                <p className="font-semibold">L'enregistrement n'a pas fonctionne</p>
+                <p className="font-semibold">L&apos;enregistrement n&apos;a pas fonctionne</p>
                 <p className="mt-1 leading-6">{saveError}</p>
               </div>
             ) : null}

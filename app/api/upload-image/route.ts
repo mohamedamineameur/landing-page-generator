@@ -1,8 +1,7 @@
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/auth";
-import { sanitizeBlobSegment, uploadBufferToBlobStorage } from "@/lib/blob-storage";
-import { getModels, syncDatabase } from "@/lib/models";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const allowedMimeTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 
@@ -27,6 +26,8 @@ export async function POST(request: Request) {
     if (auth.error || !auth.user) {
       return auth.error;
     }
+
+    const supabase = await createSupabaseServerClient();
 
     const formData = await request.formData();
     const file = formData.get("file");
@@ -54,20 +55,39 @@ export async function POST(request: Request) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const extension = resolveExtension(file.name, file.type);
-    const fileName = `${sanitizeBlobSegment(slug)}-${Date.now()}${extension}`;
-    const src = await uploadBufferToBlobStorage({
-      buffer,
-      blobName: fileName,
+    const normalizedSlug = slug
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9-_]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "") || "visuel";
+
+    const objectPath = `${auth.user.userId}/${normalizedSlug}-${Date.now()}${extension}`;
+
+    const { error: uploadError } = await supabase.storage.from("photos").upload(objectPath, buffer, {
       contentType: file.type || `image/${extension.replace(".", "")}`,
+      upsert: false,
     });
-    await syncDatabase();
-    const { Photo } = getModels();
-    await Photo.create({
-      userId: auth.user.userId,
+
+    if (uploadError) {
+      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    }
+
+    const { data: publicUrlData } = supabase.storage.from("photos").getPublicUrl(objectPath);
+    const src = publicUrlData.publicUrl;
+
+    const { error: insertError } = await supabase.from("photos").insert({
+      user_id: auth.user.userId,
+      bucket: "photos",
+      path: objectPath,
       alt,
       descrip,
-      link: src,
     });
+
+    if (insertError) {
+      return NextResponse.json({ error: insertError.message }, { status: 500 });
+    }
 
     return NextResponse.json({
       src,

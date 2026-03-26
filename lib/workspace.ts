@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server";
 import { type RuntimePagePayload } from "@/components/page-runtime-view";
 import { DEFAULT_RUNTIME_PAGE } from "@/lib/default-page";
-import { getModels, syncDatabase } from "@/lib/models";
-import {
-  findEffectiveOwnedPageForProject,
-  findOwnedProject,
-  listOwnedProjects,
-} from "@/lib/ownership";
 import { normalizePagePayloadForRuntime, validatePagePayload } from "@/lib/page-dsl";
-import { getSequelize } from "@/lib/sequelize";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function normalizeStoredPagePayload(value: unknown) {
   return normalizePagePayloadForRuntime(value) as RuntimePagePayload;
@@ -39,58 +33,129 @@ export function getDefaultRuntimePage() {
 }
 
 export async function getWorkspaceForUser(userId: string, preferredProjectId?: string | null) {
-  await syncDatabase();
-  const { User } = getModels();
+  const supabase = await createSupabaseServerClient();
 
-  const user = await User.findByPk(userId);
+  const [{ data: profile, error: profileError }, { data: projects, error: projectsError }] =
+    await Promise.all([
+      supabase.from("profiles").select("id, username, created_at").eq("id", userId).maybeSingle(),
+      supabase.from("projects").select("id, name, user_id, created_at, updated_at").order("created_at", {
+        ascending: false,
+      }),
+    ]);
 
-  if (!user) {
+  if (profileError) {
+    throw new Error(profileError.message);
+  }
+  if (!profile) {
     throw new Error("Utilisateur introuvable.");
   }
+  if (projectsError) {
+    throw new Error(projectsError.message);
+  }
 
-  return getSequelize().transaction(async (transaction) => {
-    const projects = await listOwnedProjects(userId, { transaction });
+  const currentProject =
+    (preferredProjectId ? projects?.find((project) => project.id === preferredProjectId) : null) ??
+    projects?.[0] ??
+    null;
 
-    const currentProject =
-      (preferredProjectId ? projects.find((project) => project.id === preferredProjectId) : null) ??
-      projects[0] ??
-      null;
-    const effectivePageRecord = currentProject
-      ? await findEffectiveOwnedPageForProject(userId, currentProject.id, { transaction })
-      : null;
+  const { data: effectivePageRecord, error: pageError } = currentProject
+    ? await supabase
+        .from("pages")
+        .select("id, project_id, is_effective, payload, created_at")
+        .eq("project_id", currentProject.id)
+        .eq("is_effective", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : { data: null, error: null };
 
-    return {
-      user: {
-        id: user.id,
-        username: user.username,
-        createdAt: user.createdAt,
-      },
-      projects,
-      currentProject,
-      effectivePageRecord,
-      effectivePage: effectivePageRecord ? normalizeStoredPagePayload(effectivePageRecord.payload) : null,
-    };
-  });
+  if (pageError) {
+    throw new Error(pageError.message);
+  }
+
+  return {
+    user: {
+      id: profile.id,
+      username: profile.username,
+      createdAt: profile.created_at,
+    },
+    projects: (projects ?? []).map((project) => ({
+      id: project.id,
+      name: project.name,
+      userId: project.user_id,
+      createdAt: project.created_at,
+      updatedAt: project.updated_at,
+    })),
+    currentProject: currentProject
+      ? {
+          id: currentProject.id,
+          name: currentProject.name,
+          userId: currentProject.user_id,
+          createdAt: currentProject.created_at,
+          updatedAt: currentProject.updated_at,
+        }
+      : null,
+    effectivePageRecord: effectivePageRecord
+      ? {
+          id: effectivePageRecord.id,
+          projectId: effectivePageRecord.project_id,
+          isEffective: effectivePageRecord.is_effective,
+          payload: effectivePageRecord.payload,
+          createdAt: effectivePageRecord.created_at,
+        }
+      : null,
+    effectivePage: effectivePageRecord ? normalizeStoredPagePayload(effectivePageRecord.payload) : null,
+  };
 }
 
 export async function getEffectivePageForProject(userId: string, projectId: string) {
-  await syncDatabase();
+  const supabase = await createSupabaseServerClient();
 
-  return getSequelize().transaction(async (transaction) => {
-    const project = await findOwnedProject(userId, projectId, { transaction });
+  const { data: project, error: projectError } = await supabase
+    .from("projects")
+    .select("id, name, user_id, created_at, updated_at")
+    .eq("id", projectId)
+    .maybeSingle();
 
-    if (!project) {
-      return null;
-    }
+  if (projectError) {
+    throw new Error(projectError.message);
+  }
+  if (!project || project.user_id !== userId) {
+    return null;
+  }
 
-    const effectivePageRecord = await findEffectiveOwnedPageForProject(userId, project.id, { transaction });
+  const { data: effectivePageRecord, error: pageError } = await supabase
+    .from("pages")
+    .select("id, project_id, is_effective, payload, created_at")
+    .eq("project_id", project.id)
+    .eq("is_effective", true)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-    return {
-      project,
-      effectivePageRecord,
-      effectivePage: effectivePageRecord ? normalizeStoredPagePayload(effectivePageRecord.payload) : null,
-    };
-  });
+  if (pageError) {
+    throw new Error(pageError.message);
+  }
+
+  return {
+    project: {
+      id: project.id,
+      name: project.name,
+      userId: project.user_id,
+      createdAt: project.created_at,
+      updatedAt: project.updated_at,
+    },
+    effectivePageRecord: effectivePageRecord
+      ? {
+          id: effectivePageRecord.id,
+          projectId: effectivePageRecord.project_id,
+          isEffective: effectivePageRecord.is_effective,
+          payload: effectivePageRecord.payload,
+          createdAt: effectivePageRecord.created_at,
+        }
+      : null,
+    effectivePage: effectivePageRecord ? normalizeStoredPagePayload(effectivePageRecord.payload) : null,
+  };
 }
 
 export async function getCurrentWorkspacePage(userId: string, preferredProjectId?: string | null) {
@@ -110,37 +175,60 @@ export async function createPageVersionForProject(
 ) {
   const normalizedPage = validateRuntimePagePayload(value);
 
-  await syncDatabase();
-  const { Page } = getModels();
+  const supabase = await createSupabaseServerClient();
 
-  return getSequelize().transaction(async (transaction) => {
-    const project = await findOwnedProject(userId, projectId, { transaction });
+  const { data: project, error: projectError } = await supabase
+    .from("projects")
+    .select("id, name, user_id, created_at, updated_at")
+    .eq("id", projectId)
+    .maybeSingle();
 
-    if (!project) {
-      return null;
-    }
+  if (projectError) {
+    throw new Error(projectError.message);
+  }
+  if (!project || project.user_id !== userId) {
+    return null;
+  }
 
-    await Page.update(
-      { isEffective: false },
-      {
-        where: { projectId },
-        transaction,
-      },
-    );
+  const { error: disableError } = await supabase
+    .from("pages")
+    .update({ is_effective: false })
+    .eq("project_id", projectId)
+    .eq("is_effective", true);
 
-    const pageRecord = await Page.create(
-      {
-        projectId,
-        payload: normalizedPage,
-        isEffective: true,
-      },
-      { transaction },
-    );
+  if (disableError) {
+    throw new Error(disableError.message);
+  }
 
-    return {
-      project,
-      pageRecord,
-      page: normalizeStoredPagePayload(pageRecord.payload),
-    };
-  });
+  const { data: pageRecord, error: insertError } = await supabase
+    .from("pages")
+    .insert({
+      project_id: projectId,
+      payload: normalizedPage,
+      is_effective: true,
+    })
+    .select("id, project_id, is_effective, payload, created_at")
+    .single();
+
+  if (insertError) {
+    throw new Error(insertError.message);
+  }
+
+  return {
+    project: {
+      id: project.id,
+      name: project.name,
+      userId: project.user_id,
+      createdAt: project.created_at,
+      updatedAt: project.updated_at,
+    },
+    pageRecord: {
+      id: pageRecord.id,
+      projectId: pageRecord.project_id,
+      isEffective: pageRecord.is_effective,
+      payload: pageRecord.payload,
+      createdAt: pageRecord.created_at,
+    },
+    page: normalizeStoredPagePayload(pageRecord.payload),
+  };
 }

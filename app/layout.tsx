@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   description: "Pages Next.js construites dynamiquement depuis un JSON.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: Readonly<{

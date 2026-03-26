@@ -499,14 +499,14 @@ function getValueAtPath(target: unknown, path: PageEditorPathSegment[]) {
   return cursor;
 }
 
-function updatePageValue<TPage extends { [key: string]: unknown }>(
+function updatePageValue<TPage extends object>(
   page: TPage,
   path: PageEditorPathSegment[],
   nextValue: unknown,
   locale: string,
 ) {
-  const clonedPage = clonePage(page);
-  let cursor: unknown = clonedPage;
+  const clonedPage = clonePage(page) as TPage;
+  let cursor: unknown = clonedPage as unknown;
 
   for (let index = 0; index < path.length - 1; index += 1) {
     const segment = path[index];
@@ -539,12 +539,12 @@ function updatePageValue<TPage extends { [key: string]: unknown }>(
   return clonedPage;
 }
 
-function updateArrayAtPath<TPage extends { [key: string]: unknown }>(
+function updateArrayAtPath<TPage extends object>(
   page: TPage,
   path: PageEditorPathSegment[],
   mutate: (items: unknown[]) => void,
 ) {
-  const clonedPage = clonePage(page);
+  const clonedPage = clonePage(page) as TPage;
   const target = getValueAtPath(clonedPage, path);
   if (!Array.isArray(target)) {
     return clonedPage;
@@ -1370,8 +1370,8 @@ export function DashboardVisualEditor({
       return `/view/${projectSlug}`;
     }
 
-    return currentPageId ? `/view/${currentPageId}` : "/projects";
-  }, [currentPageId, currentProject?.name]);
+    return "/projects";
+  }, [currentProject?.name]);
   const selectedSection =
     selectedSectionIndex !== null ? draftPage.sections[selectedSectionIndex] : null;
   const selectedAllowedVariants =
@@ -1549,7 +1549,12 @@ export function DashboardVisualEditor({
     setImageLibrary((current) => [src, ...current.filter((item) => item !== src)]);
   }
 
-  function updateThemeColor(field: keyof NonNullable<RuntimePagePayload["theme"]>, nextValue: string) {
+  type ThemeColorKey = Exclude<
+    keyof NonNullable<RuntimePagePayload["theme"]>,
+    "name" | "cornerStyle" | "palette"
+  >;
+
+  function updateThemeColor(field: ThemeColorKey, nextValue: string) {
     setDraftPage((current) => {
       const nextPage = clonePage(current);
       if (!nextPage.theme) {
@@ -2736,7 +2741,7 @@ export function DashboardVisualEditor({
                 <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">Palette prete a l'emploi</p>
+                      <p className="text-sm font-semibold text-slate-900">Palette prete a l&apos;emploi</p>
                       <p className="mt-1 text-sm text-slate-500">
                         Retrouve ici les memes ambiances couleur que dans la creation.
                       </p>

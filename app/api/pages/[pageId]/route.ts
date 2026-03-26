@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/auth";
 import { deepMergeJson, isRecord, isUuid, jsonError, sanitizePayload } from "@/lib/api-utils";
-import { getModels, syncDatabase } from "@/lib/models";
-import { findOwnedPage } from "@/lib/ownership";
-import { getSequelize } from "@/lib/sequelize";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -27,14 +25,28 @@ export async function GET(_request: Request, context: RouteContext) {
       return jsonError("Le pageId doit etre un UUID valide.");
     }
 
-    await syncDatabase();
-    const page = await findOwnedPage(auth.user.userId, pageId);
+    const supabase = await createSupabaseServerClient();
+    const { data: page, error } = await supabase
+      .from("pages")
+      .select("id, project_id, is_effective, payload, created_at")
+      .eq("id", pageId)
+      .maybeSingle();
+
+    if (error) {
+      return jsonError(error.message, 500);
+    }
 
     if (!page) {
       return jsonError("Page introuvable.", 404);
     }
 
-    return NextResponse.json(page);
+    return NextResponse.json({
+      id: page.id,
+      projectId: page.project_id,
+      isEffective: page.is_effective,
+      payload: page.payload,
+      createdAt: page.created_at,
+    });
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Impossible de recuperer la page.", 500);
   }
@@ -66,40 +78,54 @@ export async function PATCH(request: Request, context: RouteContext) {
       return jsonError("Le payload est requis et doit etre un JSON valide.");
     }
 
-    await syncDatabase();
-    const { Page } = getModels();
-    const nextPage = await getSequelize().transaction(async (transaction) => {
-      const currentPage = await findOwnedPage(auth.user.userId, pageId, { transaction });
+    const supabase = await createSupabaseServerClient();
+    const { data: currentPage, error: currentError } = await supabase
+      .from("pages")
+      .select("id, project_id, is_effective, payload, created_at")
+      .eq("id", pageId)
+      .maybeSingle();
 
-      if (!currentPage) {
-        return null;
-      }
+    if (currentError) {
+      return jsonError(currentError.message, 500);
+    }
 
-      const nextPayload = deepMergeJson(currentPage.payload, payloadUpdate);
-
-      await Page.update(
-        { isEffective: false },
-        {
-          where: { projectId: currentPage.projectId },
-          transaction,
-        },
-      );
-
-      return Page.create(
-        {
-          projectId: currentPage.projectId,
-          payload: nextPayload,
-          isEffective: true,
-        },
-        { transaction },
-      );
-    });
-
-    if (!nextPage) {
+    if (!currentPage) {
       return jsonError("Page introuvable.", 404);
     }
 
-    return NextResponse.json(nextPage);
+    const nextPayload = deepMergeJson(currentPage.payload, payloadUpdate);
+
+    const { error: disableError } = await supabase
+      .from("pages")
+      .update({ is_effective: false })
+      .eq("project_id", currentPage.project_id)
+      .eq("is_effective", true);
+
+    if (disableError) {
+      return jsonError(disableError.message, 500);
+    }
+
+    const { data: nextPage, error: insertError } = await supabase
+      .from("pages")
+      .insert({
+        project_id: currentPage.project_id,
+        payload: nextPayload,
+        is_effective: true,
+      })
+      .select("id, project_id, is_effective, payload, created_at")
+      .single();
+
+    if (insertError) {
+      return jsonError(insertError.message, 500);
+    }
+
+    return NextResponse.json({
+      id: nextPage.id,
+      projectId: nextPage.project_id,
+      isEffective: nextPage.is_effective,
+      payload: nextPage.payload,
+      createdAt: nextPage.created_at,
+    });
   } catch (error) {
     return jsonError(
       error instanceof Error ? error.message : "Impossible de creer une nouvelle version de la page.",

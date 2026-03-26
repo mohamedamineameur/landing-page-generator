@@ -323,8 +323,8 @@ export default function PromptPage() {
       return `/view/${projectSlug}`;
     }
 
-    return generatedPageId ? `/view/${generatedPageId}` : "/projects";
-  }, [currentProject?.name, generatedPageId]);
+    return "/projects";
+  }, [currentProject?.name]);
 
   useEffect(() => {
     if (!authLoading && !currentProject) {
@@ -740,7 +740,7 @@ export default function PromptPage() {
                 </div>
 
                 <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-semibold text-slate-700">L'objectif principal</p>
+                  <p className="text-sm font-semibold text-slate-700">L&apos;objectif principal</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {GUIDED_OBJECTIVE_OPTIONS.map((option) => (
                       <button

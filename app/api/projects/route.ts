@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/auth";
 import { jsonError, isRecord, sanitizeProjectName } from "@/lib/api-utils";
-import { getModels, syncDatabase } from "@/lib/models";
-import { listOwnedProjects } from "@/lib/ownership";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -14,12 +13,25 @@ export async function GET() {
       return auth.error;
     }
 
-    await syncDatabase();
-    const { Project } = getModels();
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase
+      .from("projects")
+      .select("id, name, user_id, created_at, updated_at")
+      .order("created_at", { ascending: false });
 
-    const projects = await listOwnedProjects(auth.user.userId);
+    if (error) {
+      return jsonError(error.message, 500);
+    }
 
-    return NextResponse.json(projects);
+    return NextResponse.json(
+      (data ?? []).map((project) => ({
+        id: project.id,
+        name: project.name,
+        userId: project.user_id,
+        createdAt: project.created_at,
+        updatedAt: project.updated_at,
+      })),
+    );
   } catch (error) {
     return jsonError(
       error instanceof Error ? error.message : "Impossible de lister les projets.",
@@ -50,14 +62,27 @@ export async function POST(request: Request) {
       return jsonError("Le nom du projet est requis.");
     }
 
-    await syncDatabase();
-    const { Project } = getModels();
-    const project = await Project.create({
-      name,
-      userId: currentUserId,
-    });
+    const supabase = await createSupabaseServerClient();
+    const { data: project, error } = await supabase
+      .from("projects")
+      .insert({ name, user_id: currentUserId })
+      .select("id, name, user_id, created_at, updated_at")
+      .single();
 
-    return NextResponse.json(project, { status: 201 });
+    if (error) {
+      return jsonError(error.message, 500);
+    }
+
+    return NextResponse.json(
+      {
+        id: project.id,
+        name: project.name,
+        userId: project.user_id,
+        createdAt: project.created_at,
+        updatedAt: project.updated_at,
+      },
+      { status: 201 },
+    );
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Impossible de creer le projet.", 500);
   }

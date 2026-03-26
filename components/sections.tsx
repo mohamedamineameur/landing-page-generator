@@ -1566,8 +1566,12 @@ export function NavbarSection({
 
                     event.preventDefault();
                     event.stopPropagation();
+                    const path = sectionPath(sectionIndex, "links", linkIndex, "label");
+                    if (!path) {
+                      return;
+                    }
                     editor.openEditor({
-                      path: sectionPath(sectionIndex, "links", linkIndex, "label"),
+                      path,
                       label: `le lien ${linkIndex + 1} du menu`,
                       value: link.label,
                     });
@@ -1647,8 +1651,12 @@ export function NavbarSection({
                       if (editor.enabled && editor.editMode) {
                         event.preventDefault();
                         event.stopPropagation();
+                        const path = sectionPath(sectionIndex, "links", linkIndex, "label");
+                        if (!path) {
+                          return;
+                        }
                         editor.openEditor({
-                          path: sectionPath(sectionIndex, "links", linkIndex, "label"),
+                          path,
                           label: `le lien mobile ${linkIndex + 1}`,
                           value: link.label,
                         });
@@ -1706,8 +1714,12 @@ export function FooterSection({ columns, sectionIndex }: FooterProps & { section
 
                       event.preventDefault();
                       event.stopPropagation();
+                      const path = sectionPath(sectionIndex, "columns", columnIndex, "links", linkIndex, "label");
+                      if (!path) {
+                        return;
+                      }
                       editor.openEditor({
-                        path: sectionPath(sectionIndex, "columns", columnIndex, "links", linkIndex, "label"),
+                        path,
                         label: `le lien ${linkIndex + 1} du footer`,
                         value: link.label,
                       });

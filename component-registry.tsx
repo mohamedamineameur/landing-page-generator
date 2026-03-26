@@ -481,7 +481,7 @@ export function renderSection(section: PageSection, key?: React.Key) {
     );
   }
 
-  const Component = registryEntry.component as React.ComponentType<Record<string, unknown>>;
+  const Component = registryEntry.component as unknown as React.ComponentType<Record<string, unknown>>;
 
   return (
     <Component

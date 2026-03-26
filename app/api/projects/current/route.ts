@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/auth";
 import { isRecord, readUuid } from "@/lib/api-utils";
-import { syncDatabase } from "@/lib/models";
-import { findOwnedProject } from "@/lib/ownership";
 import { CURRENT_PROJECT_COOKIE_NAME } from "@/lib/project-selection";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -27,8 +26,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Le projectId doit etre un UUID valide." }, { status: 400 });
     }
 
-    await syncDatabase();
-    const project = await findOwnedProject(auth.user.userId, projectId);
+    const supabase = await createSupabaseServerClient();
+    const { data: project, error } = await supabase
+      .from("projects")
+      .select("id, name, user_id, created_at, updated_at")
+      .eq("id", projectId)
+      .maybeSingle();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
     if (!project) {
       return NextResponse.json({ error: "Projet introuvable." }, { status: 404 });
@@ -36,7 +43,13 @@ export async function POST(request: Request) {
 
     const response = NextResponse.json({
       success: true,
-      project,
+      project: {
+        id: project.id,
+        name: project.name,
+        userId: project.user_id,
+        createdAt: project.created_at,
+        updatedAt: project.updated_at,
+      },
     });
 
     response.cookies.set({

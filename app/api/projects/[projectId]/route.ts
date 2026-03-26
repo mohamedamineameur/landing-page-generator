@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/auth";
 import { jsonError, isUuid, isRecord, sanitizeProjectName } from "@/lib/api-utils";
-import { syncDatabase } from "@/lib/models";
-import { findOwnedProject } from "@/lib/ownership";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -26,14 +25,28 @@ export async function GET(_request: Request, context: RouteContext) {
       return jsonError("Le projectId doit etre un UUID valide.");
     }
 
-    await syncDatabase();
-    const project = await findOwnedProject(auth.user.userId, projectId);
+    const supabase = await createSupabaseServerClient();
+    const { data: project, error } = await supabase
+      .from("projects")
+      .select("id, name, user_id, created_at, updated_at")
+      .eq("id", projectId)
+      .maybeSingle();
+
+    if (error) {
+      return jsonError(error.message, 500);
+    }
 
     if (!project) {
       return jsonError("Projet introuvable.", 404);
     }
 
-    return NextResponse.json(project);
+    return NextResponse.json({
+      id: project.id,
+      name: project.name,
+      userId: project.user_id,
+      createdAt: project.created_at,
+      updatedAt: project.updated_at,
+    });
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Impossible de recuperer le projet.", 500);
   }
@@ -65,17 +78,29 @@ export async function PATCH(request: Request, context: RouteContext) {
       return jsonError("Le nom du projet est requis.");
     }
 
-    await syncDatabase();
-    const project = await findOwnedProject(auth.user.userId, projectId);
+    const supabase = await createSupabaseServerClient();
+    const { data: project, error } = await supabase
+      .from("projects")
+      .update({ name })
+      .eq("id", projectId)
+      .select("id, name, user_id, created_at, updated_at")
+      .maybeSingle();
+
+    if (error) {
+      return jsonError(error.message, 500);
+    }
 
     if (!project) {
       return jsonError("Projet introuvable.", 404);
     }
 
-    project.name = name;
-    await project.save();
-
-    return NextResponse.json(project);
+    return NextResponse.json({
+      id: project.id,
+      name: project.name,
+      userId: project.user_id,
+      createdAt: project.created_at,
+      updatedAt: project.updated_at,
+    });
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Impossible de mettre a jour le projet.", 500);
   }

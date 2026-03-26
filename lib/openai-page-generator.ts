@@ -1,8 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import OpenAI from "openai";
-import { sanitizeBlobSegment, uploadBufferToBlobStorage } from "@/lib/blob-storage";
-import { getModels, syncDatabase } from "@/lib/models";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   dslPromptSummary,
   normalizePagePayloadForRuntime,
@@ -455,25 +454,55 @@ function validateGeneratedBundle(value: unknown, userRequest: string): Generated
 }
 
 async function saveGeneratedImage(base64Image: string, slug: string) {
-  const fileName = `${sanitizeBlobSegment(slug)}-${Date.now()}.png`;
+  const normalizedSlug = slug
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9-_]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "") || "visuel";
 
-  return uploadBufferToBlobStorage({
+  return {
+    fileName: `${normalizedSlug}-${Date.now()}.png`,
     buffer: Buffer.from(base64Image, "base64"),
-    blobName: fileName,
-    contentType: "image/png",
-  });
+  };
 }
 
-async function createOwnedPhoto(userId: string, link: string, alt?: string, descrip?: string) {
-  await syncDatabase();
-  const { Photo } = getModels();
+async function uploadGeneratedImageToSupabase(params: {
+  userId: string;
+  slug: string;
+  base64Png: string;
+  alt?: string;
+  descrip?: string;
+}) {
+  const supabase = await createSupabaseServerClient();
+  const prepared = await saveGeneratedImage(params.base64Png, params.slug);
+  const objectPath = `${params.userId}/${prepared.fileName}`;
 
-  await Photo.create({
-    userId,
-    link,
-    alt: alt?.trim() ? alt.trim().slice(0, 255) : null,
-    descrip: descrip?.trim() ? descrip.trim().slice(0, 2000) : null,
+  const { error: uploadError } = await supabase.storage.from("photos").upload(objectPath, prepared.buffer, {
+    contentType: "image/png",
+    upsert: false,
   });
+
+  if (uploadError) {
+    throw new Error(uploadError.message);
+  }
+
+  const { data: publicUrlData } = supabase.storage.from("photos").getPublicUrl(objectPath);
+
+  const { error: insertError } = await supabase.from("photos").insert({
+    user_id: params.userId,
+    bucket: "photos",
+    path: objectPath,
+    alt: params.alt?.trim() ? params.alt.trim().slice(0, 255) : null,
+    descrip: params.descrip?.trim() ? params.descrip.trim().slice(0, 2000) : null,
+  });
+
+  if (insertError) {
+    throw new Error(insertError.message);
+  }
+
+  return publicUrlData.publicUrl;
 }
 
 function injectGeneratedImagesIntoPage(
@@ -909,14 +938,17 @@ async function resolveGeneratedBundleWithImages(generatedBundle: GeneratedPageBu
       throw new Error("La generation d'image OpenAI n'a retourne aucune image.");
     }
 
-    const imageSrc = await saveGeneratedImage(
-      imageBase64,
-      `${generatedBundle.page.slug}-${index + 1}`,
-    );
-
-    if (userId) {
-      await createOwnedPhoto(userId, imageSrc, imageSpec.alt, imageSpec.prompt);
-    }
+    const imageSrc = userId
+      ? await uploadGeneratedImageToSupabase({
+          userId,
+          base64Png: imageBase64,
+          slug: `${generatedBundle.page.slug}-${index + 1}`,
+          alt: imageSpec.alt,
+          descrip: imageSpec.prompt,
+        })
+      : (() => {
+          throw new Error("userId requis pour stocker les images.");
+        })();
 
     generatedImages.push({
       src: imageSrc,

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/auth";
-import { syncDatabase } from "@/lib/models";
-import { listOwnedPhotos } from "@/lib/ownership";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -13,18 +12,26 @@ export async function GET() {
       return auth.error;
     }
 
-    await syncDatabase();
-    const photos = await listOwnedPhotos(auth.user.userId);
+    const supabase = await createSupabaseServerClient();
+    const { data: photos, error } = await supabase
+      .from("photos")
+      .select("id, user_id, bucket, path, alt, descrip, created_at, updated_at")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
     return NextResponse.json(
-      photos.map((photo) => ({
+      (photos ?? []).map((photo) => ({
         id: photo.id,
-        userId: photo.userId,
+        userId: photo.user_id,
         alt: photo.alt,
         descrip: photo.descrip,
-        link: photo.link,
-        createdAt: photo.createdAt,
-        updatedAt: photo.updatedAt,
+        link: supabase.storage.from(photo.bucket).getPublicUrl(photo.path).data.publicUrl,
+        bucket: photo.bucket,
+        createdAt: photo.created_at,
+        updatedAt: photo.updated_at,
       })),
     );
   } catch (error) {

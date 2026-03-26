@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { authorizedFetch } from "@/lib/client-api";
 import { formatProjectNameInput, normalizeProjectName } from "@/lib/project-name";
+import { useAvailability } from "@/lib/use-availability";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function OnboardingPage() {
   const [projectName, setProjectName] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const projectAvailability = useAvailability({ kind: "projectName", value: projectName });
 
   useEffect(() => {
     if (!loading && !creating && user && projects.length > 0) {
@@ -80,7 +82,7 @@ export default function OnboardingPage() {
             className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             href="/"
           >
-            Retour a l'accueil
+            Retour a l&apos;accueil
           </Link>
 
           <div className="mt-10">
@@ -95,7 +97,7 @@ export default function OnboardingPage() {
               Commence proprement.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-slate-600 md:text-lg">
-              Donne simplement un nom a ton projet. On t'emmene ensuite vers la creation de ta premiere page, sans
+              Donne simplement un nom a ton projet. On t&apos;emmene ensuite vers la creation de ta premiere page, sans
               etape technique inutile.
             </p>
           </div>
@@ -130,6 +132,30 @@ export default function OnboardingPage() {
               Ce nom sera aussi utilise dans ton URL, donc il est automatiquement formate avec des tirets.
             </p>
 
+            {projectName.trim() ? (
+              <div
+                className={
+                  projectAvailability.status === "available"
+                    ? "rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+                    : projectAvailability.status === "unavailable"
+                      ? "rounded-[18px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+                      : projectAvailability.status === "error"
+                        ? "rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+                        : "rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600"
+                }
+              >
+                {projectAvailability.status === "checking"
+                  ? "Verification du nom..."
+                  : projectAvailability.status === "available"
+                    ? "Nom disponible."
+                    : projectAvailability.status === "unavailable"
+                      ? "Ce nom est deja utilise dans ton espace."
+                      : projectAvailability.status === "error"
+                        ? projectAvailability.message
+                        : null}
+              </div>
+            ) : null}
+
             {error ? (
               <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700">
                 {error}
@@ -138,7 +164,11 @@ export default function OnboardingPage() {
 
             <button
               className="inline-flex min-h-14 items-center justify-center rounded-full bg-slate-950 px-6 py-4 text-base font-semibold text-white shadow-[0_20px_44px_rgba(15,23,42,0.18)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
-              disabled={creating}
+              disabled={
+                creating ||
+                projectAvailability.status === "checking" ||
+                projectAvailability.status === "unavailable"
+              }
               onClick={createFirstProject}
               type="button"
             >
@@ -146,7 +176,7 @@ export default function OnboardingPage() {
             </button>
 
             <p className="text-center text-sm font-medium text-slate-600">
-              Tu passeras directement a l'etape suivante apres le clic.
+              Tu passeras directement a l&apos;etape suivante apres le clic.
             </p>
 
             <p className="text-xs leading-5 text-slate-500">

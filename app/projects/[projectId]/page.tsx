@@ -118,7 +118,7 @@ export default function ProjectPagesPage() {
                 {project?.name ?? "Projet"}
               </h1>
               <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
-                Clique ensuite sur les outils d'edition pour continuer le travail sur ce projet.
+                Clique ensuite sur les outils d&apos;edition pour continuer le travail sur ce projet.
               </p>
             </div>
 
@@ -133,7 +133,7 @@ export default function ProjectPagesPage() {
                 </div>
               ) : pages.length === 0 ? (
                 <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                  Aucune page n'a encore ete creee pour ce projet.
+                  Aucune page n&apos;a encore ete creee pour ce projet.
                 </div>
               ) : (
                 pages.map((page) => (
@@ -160,7 +160,7 @@ export default function ProjectPagesPage() {
                         <div className="flex flex-wrap items-center gap-2">
                           <Link
                             className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-white"
-                            href={`/view/${page.id}`}
+                            href={currentProjectViewHref ?? "/projects"}
                             target="_blank"
                           >
                             Voir la page
@@ -191,7 +191,7 @@ export default function ProjectPagesPage() {
                       ) : (
                         <Link
                           className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-950 bg-slate-950 px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5"
-                          href={currentProjectViewHref ?? `/view/${page.id}`}
+                          href={currentProjectViewHref ?? "/projects"}
                           target="_blank"
                         >
                           Voir la page

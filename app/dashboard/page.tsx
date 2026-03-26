@@ -3,8 +3,7 @@ import { redirect } from "next/navigation";
 import { loadAuthenticatedWorkspace, loadRuntimePage } from "@/lib/load-runtime-page";
 import { DashboardVisualEditor } from "@/components/dashboard-visual-editor";
 import { WorkspacePageShell } from "@/components/workspace-page-shell";
-import { syncDatabase } from "@/lib/models";
-import { listOwnedPhotos } from "@/lib/ownership";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -19,11 +18,15 @@ export default async function DashboardPage() {
   let availableImages: string[] = [];
 
   if (workspace?.user?.id) {
-    await syncDatabase();
-    const photos = await listOwnedPhotos(workspace.user.id);
-    availableImages = photos
-      .map((photo) => photo.link)
-      .filter((link) => typeof link === "string" && link.trim().length > 0);
+    const supabase = await createSupabaseServerClient();
+    const { data: photos } = await supabase
+      .from("photos")
+      .select("bucket, path")
+      .order("created_at", { ascending: false });
+
+    availableImages = (photos ?? [])
+      .map((photo) => supabase.storage.from(photo.bucket).getPublicUrl(photo.path).data.publicUrl)
+      .filter((url) => typeof url === "string" && url.trim().length > 0);
   }
 
   return (

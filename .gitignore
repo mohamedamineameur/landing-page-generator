@@ -1,0 +1,34 @@
+.next/
+node_modules/
+coverage/
+dist/
+build/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# TypeScript / tooling
+*.tsbuildinfo
+.eslintcache
+
+# Deployment
+.vercel/
+
+# Generated assets
+public/generated/

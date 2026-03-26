@@ -1,0 +1,94 @@
+@baseUrl = http://localhost:3000
+@username = amine_test
+@password = password123
+@projectName = Projet demo
+
+### 1. Creer un utilisateur
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+### 2. Login
+# Copie le token retourne dans la variable @token ci-dessous si ton client HTTP
+# ne supporte pas l'extraction automatique.
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+@token = colle_ici_le_token_jwt
+@projectId = colle_ici_l_uuid_du_projet
+@pageId = colle_ici_l_uuid_de_la_page
+
+### 3. Creer un projet
+POST {{baseUrl}}/api/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "{{projectName}}"
+}
+
+### 4. Lister mes projets
+GET {{baseUrl}}/api/projects
+Authorization: Bearer {{token}}
+
+### 5. Recuperer un projet par id
+GET {{baseUrl}}/api/projects/{{projectId}}
+Authorization: Bearer {{token}}
+
+### 6. Creer une premiere page effective
+POST {{baseUrl}}/api/projects/{{projectId}}/pages
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": {
+    "title": "Landing page v1",
+    "sections": [
+      {
+        "type": "hero",
+        "headline": "Bienvenue"
+      }
+    ]
+  }
+}
+
+### 7. Lister l'historique des pages d'un projet
+GET {{baseUrl}}/api/projects/{{projectId}}/pages
+Authorization: Bearer {{token}}
+
+### 8. Recuperer une page par id
+GET {{baseUrl}}/api/pages/{{pageId}}
+Authorization: Bearer {{token}}
+
+### 9. Creer une nouvelle version a partir d'une page existante
+PATCH {{baseUrl}}/api/pages/{{pageId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": {
+    "title": "Landing page v2",
+    "sections": [
+      {
+        "type": "hero",
+        "headline": "Bienvenue sur la version 2"
+      }
+    ]
+  }
+}
+
+### 10. Rendre une page precise effective
+POST {{baseUrl}}/api/pages/{{pageId}}/effective
+Authorization: Bearer {{token}}
+
+### 11. Verification croisee
+# Avec le token d'un autre user, les projets/pages ci-dessus ne doivent pas etre accessibles.

@@ -1,0 +1,2112 @@
+{
+  "version": "4.0",
+  "meta": {
+    "name": "Capturia Funnel Builder DSL",
+    "description": "AI-driven page builder schema",
+    "strict": true
+  },
+  "rendering": {
+    "uiLibrary": {
+      "name": "Tailwind CSS",
+      "package": "tailwindcss",
+      "themeProvider": "css-variables-and-utility-classes",
+      "primitivesToken": "tailwindPrimitive"
+    },
+    "iconLibrary": {
+      "name": "Runtime SVG Icons",
+      "package": "inline-svg",
+      "token": "icon"
+    },
+    "notes": [
+      "All design system primitives are rendered with Tailwind utility classes and CSS variables.",
+      "All icon props should use the runtime icon token instead of a framework-specific icon package.",
+      "The runtime maps CTA, layout, cards, forms and navigation to React components styled with Tailwind CSS."
+    ]
+  },
+  "tokens": {
+    "spacing": ["none", "xs", "sm", "md", "lg", "xl", "2xl", "3xl", "4xl"],
+    "radius": ["none", "xs", "sm", "md", "lg", "xl", "2xl", "full"],
+    "shadow": ["none", "xs", "sm", "md", "lg", "xl", "2xl"],
+    "textAlign": ["left", "center", "right"],
+    "layout": ["stack", "grid", "split", "columns", "masonry", "carousel", "tabs"],
+    "background": ["transparent", "white", "muted", "primary", "secondary", "dark", "gradient"],
+    "ctaAction": [
+      "scroll_to_form",
+      "scroll_to_section",
+      "open_modal",
+      "navigate",
+      "submit_form",
+      "start_quiz",
+      "book_call",
+      "download",
+      "copy_code",
+      "play_video"
+    ],
+    "mediaType": ["image", "video", "animation", "icon", "logo"],
+    "aspectRatio": ["1:1", "4:3", "3:2", "16:9", "21:9", "auto"],
+    "variantTone": ["neutral", "professional", "friendly", "luxury", "bold", "minimal"],
+    "width": ["xs", "sm", "md", "lg", "xl", "2xl", "full"],
+    "columns": [1, 2, 3, 4, 5, 6],
+    "iconPosition": ["left", "right", "top", "bottom"],
+    "formFieldType": [
+      "text",
+      "email",
+      "tel",
+      "number",
+      "textarea",
+      "select",
+      "radio",
+      "checkbox",
+      "date",
+      "time",
+      "hidden",
+      "url"
+    ],
+    "buttonVariant": ["primary", "secondary", "outline", "ghost", "link"],
+    "badgeVariant": ["solid", "soft", "outline"],
+    "animationType": ["none", "fade_in", "slide_up", "slide_left", "slide_right", "zoom_in"],
+    "deviceVisibility": ["all", "desktop", "tablet", "mobile"],
+    "tailwindPrimitive": [
+      "div",
+      "section",
+      "article",
+      "nav",
+      "header",
+      "footer",
+      "button",
+      "a",
+      "img",
+      "form",
+      "input",
+      "textarea",
+      "select",
+      "table",
+      "thead",
+      "tbody",
+      "tr",
+      "td",
+      "th",
+      "span"
+    ],
+    "icon": [
+      "clock",
+      "sparkles",
+      "bakery",
+      "check",
+      "expand",
+      "layers",
+      "phone",
+      "shield",
+      "star",
+      "user",
+      "celebration",
+      "favorite",
+      "info",
+      "arrow_right",
+      "bag",
+      "offer"
+    ],
+    "themeColor": ["inherit", "primary", "secondary", "success", "warning", "error", "info"],
+    "buttonStyle": ["text", "outlined", "contained"],
+    "chipStyle": ["filled", "outlined"],
+    "iconSize": ["small", "medium", "large"]
+  },
+  "allowedComponents": [
+    {
+      "type": "section",
+      "props": {
+        "layout": "layout",
+        "background": "background",
+        "paddingTop": "spacing",
+        "paddingBottom": "spacing",
+        "paddingX": "spacing",
+        "maxWidth": "width",
+        "align": "textAlign",
+        "tone": "variantTone",
+        "animation": "animationType",
+        "visibility": "deviceVisibility",
+        "children": "Component[]"
+      }
+    },
+    {
+      "type": "container",
+      "props": {
+        "maxWidth": "width",
+        "paddingX": "spacing",
+        "paddingY": "spacing",
+        "align": "textAlign",
+        "children": "Component[]"
+      }
+    },
+    {
+      "type": "grid",
+      "props": {
+        "columns": "number",
+        "gap": "spacing",
+        "align": "textAlign",
+        "children": "Component[]"
+      }
+    },
+    {
+      "type": "stack",
+      "props": {
+        "gap": "spacing",
+        "align": "textAlign",
+        "children": "Component[]"
+      }
+    },
+    {
+      "type": "mui_box",
+      "props": {
+        "component": "string",
+        "sx": "object",
+        "children": "Component[]"
+      }
+    },
+    {
+      "type": "mui_stack",
+      "props": {
+        "direction": "row | column",
+        "spacing": "spacing",
+        "align": "textAlign",
+        "children": "Component[]"
+      }
+    },
+    {
+      "type": "mui_typography",
+      "props": {
+        "variant": "string",
+        "content": "string",
+        "align": "textAlign",
+        "color": "themeColor"
+      }
+    },
+    {
+      "type": "mui_button",
+      "props": {
+        "label": "string",
+        "action": "ctaAction",
+        "variant": "buttonStyle",
+        "color": "themeColor",
+        "size": "iconSize",
+        "startIcon": "icon",
+        "endIcon": "icon"
+      }
+    },
+    {
+      "type": "mui_icon",
+      "props": {
+        "name": "icon",
+        "color": "themeColor",
+        "size": "iconSize"
+      }
+    },
+    {
+      "type": "split_layout",
+      "props": {
+        "leftWidth": "string",
+        "rightWidth": "string",
+        "gap": "spacing",
+        "reverseOnMobile": "boolean",
+        "left": "Component[]",
+        "right": "Component[]"
+      }
+    },
+    {
+      "type": "columns_layout",
+      "props": {
+        "columns": "number",
+        "gap": "spacing",
+        "items": "Component[]"
+      }
+    },
+    {
+      "type": "masonry_layout",
+      "props": {
+        "columns": "number",
+        "gap": "spacing",
+        "items": "Component[]"
+      }
+    },
+    {
+      "type": "tabs_layout",
+      "props": {
+        "tabs": [
+          {
+            "label": "string",
+            "content": "Component[]"
+          }
+        ],
+        "defaultTab": "string"
+      }
+    },
+    {
+      "type": "carousel_layout",
+      "props": {
+        "itemsPerView": "number",
+        "autoplay": "boolean",
+        "showDots": "boolean",
+        "showArrows": "boolean",
+        "items": "Component[]"
+      }
+    },
+    {
+      "type": "accordion_layout",
+      "props": {
+        "items": [
+          {
+            "title": "string",
+            "content": "Component[]"
+          }
+        ],
+        "allowMultiple": "boolean"
+      }
+    },
+    {
+      "type": "navbar",
+      "props": {
+        "logoText": "string",
+        "links": [
+          {
+            "label": "string",
+            "href": "string"
+          }
+        ],
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        },
+        "sticky": "boolean",
+        "transparent": "boolean",
+        "showOnScroll": "boolean"
+      }
+    },
+    {
+      "type": "mobile_menu",
+      "props": {
+        "logo": "string",
+        "links": [
+          {
+            "label": "string",
+            "href": "string"
+          }
+        ],
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "announcement_bar",
+      "props": {
+        "text": "string",
+        "linkLabel": "string",
+        "linkHref": "string",
+        "background": "background"
+      }
+    },
+    {
+      "type": "breadcrumb",
+      "props": {
+        "items": [
+          {
+            "label": "string",
+            "href": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "anchor_nav",
+      "props": {
+        "items": [
+          {
+            "label": "string",
+            "targetId": "string"
+          }
+        ],
+        "sticky": "boolean"
+      }
+    },
+    {
+      "type": "pagination",
+      "props": {
+        "currentPage": "number",
+        "totalPages": "number",
+        "baseUrl": "string"
+      }
+    },
+    {
+      "type": "sidebar",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "label": "string",
+            "href": "string",
+            "icon": "icon"
+          }
+        ]
+      }
+    },
+    {
+      "type": "hero",
+      "variants": ["centered", "split", "image_right", "form_right", "video_background", "minimal"],
+      "props": {
+        "eyebrow": "string",
+        "headline": "string",
+        "subheadline": "string",
+        "primaryCta": {
+          "label": "string",
+          "action": "ctaAction"
+        },
+        "secondaryCta": {
+          "label": "string",
+          "action": "ctaAction"
+        },
+        "badges": "string[]",
+        "stats": [
+          {
+            "value": "string",
+            "label": "string"
+          }
+        ],
+        "media": {
+          "kind": "image | video",
+          "style": "string",
+          "src": "string"
+        },
+        "tone": "variantTone"
+      }
+    },
+    {
+      "type": "hero_split",
+      "props": {
+        "eyebrow": "string",
+        "headline": "string",
+        "subheadline": "string",
+        "leftContent": "Component[]",
+        "rightContent": "Component[]"
+      }
+    },
+    {
+      "type": "hero_centered",
+      "props": {
+        "eyebrow": "string",
+        "headline": "string",
+        "subheadline": "string",
+        "ctaGroup": [
+          {
+            "label": "string",
+            "action": "ctaAction"
+          }
+        ],
+        "badges": "string[]"
+      }
+    },
+    {
+      "type": "hero_with_form",
+      "props": {
+        "eyebrow": "string",
+        "headline": "string",
+        "subheadline": "string",
+        "form": "Component"
+      }
+    },
+    {
+      "type": "hero_with_stats",
+      "props": {
+        "headline": "string",
+        "subheadline": "string",
+        "stats": [
+          {
+            "value": "string",
+            "label": "string"
+          }
+        ],
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "hero_with_testimonials",
+      "props": {
+        "headline": "string",
+        "subheadline": "string",
+        "testimonials": [
+          {
+            "name": "string",
+            "quote": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "hero_video",
+      "props": {
+        "headline": "string",
+        "subheadline": "string",
+        "videoUrl": "string",
+        "overlay": "boolean",
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "hero_minimal",
+      "props": {
+        "headline": "string",
+        "subheadline": "string",
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "hero_product",
+      "props": {
+        "headline": "string",
+        "subheadline": "string",
+        "productName": "string",
+        "priceHint": "string",
+        "media": {
+          "type": "image",
+          "src": "string"
+        },
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "hero_search",
+      "props": {
+        "headline": "string",
+        "subheadline": "string",
+        "placeholder": "string",
+        "submitLabel": "string"
+      }
+    },
+    {
+      "type": "hero_countdown",
+      "props": {
+        "headline": "string",
+        "subheadline": "string",
+        "endAt": "string",
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "benefits",
+      "variants": ["cards", "icons", "list", "split"],
+      "props": {
+        "title": "string",
+        "subtitle": "string",
+        "columns": "number",
+        "items": [
+          {
+            "title": "string",
+            "description": "string",
+            "icon": "icon"
+          }
+        ]
+      }
+    },
+    {
+      "type": "feature_cards",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "title": "string",
+            "description": "string",
+            "icon": "icon",
+            "cta": {
+              "label": "string",
+              "action": "ctaAction"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "features_grid",
+      "props": {
+        "columns": "number",
+        "items": [
+          {
+            "title": "string",
+            "description": "string",
+            "media": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "features_tabs",
+      "props": {
+        "title": "string",
+        "tabs": [
+          {
+            "label": "string",
+            "title": "string",
+            "description": "string",
+            "items": "string[]"
+          }
+        ]
+      }
+    },
+    {
+      "type": "features_split",
+      "props": {
+        "title": "string",
+        "subtitle": "string",
+        "content": [
+          {
+            "title": "string",
+            "description": "string"
+          }
+        ],
+        "media": {
+          "type": "image | video",
+          "src": "string"
+        }
+      }
+    },
+    {
+      "type": "icon_cards",
+      "props": {
+        "title": "string",
+        "columns": "number",
+        "items": [
+          {
+            "title": "string",
+            "description": "string",
+            "icon": "icon"
+          }
+        ]
+      }
+    },
+    {
+      "type": "text_with_image",
+      "props": {
+        "eyebrow": "string",
+        "title": "string",
+        "content": "string",
+        "image": {
+          "src": "string",
+          "alt": "string"
+        },
+        "imagePosition": "left | right"
+      }
+    },
+    {
+      "type": "text_columns",
+      "props": {
+        "title": "string",
+        "columns": [
+          {
+            "heading": "string",
+            "content": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "rich_text",
+      "props": {
+        "content": "string",
+        "align": "textAlign"
+      }
+    },
+    {
+      "type": "markdown_block",
+      "props": {
+        "content": "string",
+        "align": "textAlign"
+      }
+    },
+    {
+      "type": "bullet_points",
+      "props": {
+        "title": "string",
+        "items": "string[]",
+        "icon": "icon"
+      }
+    },
+    {
+      "type": "checklist",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "label": "string",
+            "checked": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "type": "highlight_block",
+      "props": {
+        "title": "string",
+        "content": "string",
+        "highlight": "string"
+      }
+    },
+    {
+      "type": "quote_block",
+      "props": {
+        "quote": "string",
+        "author": "string",
+        "role": "string"
+      }
+    },
+    {
+      "type": "story_block",
+      "props": {
+        "title": "string",
+        "paragraphs": "string[]"
+      }
+    },
+    {
+      "type": "mission_block",
+      "props": {
+        "title": "string",
+        "description": "string",
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "values_grid",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "title": "string",
+            "description": "string",
+            "icon": "icon"
+          }
+        ]
+      }
+    },
+    {
+      "type": "timeline",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "date": "string",
+            "title": "string",
+            "description": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "steps",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "step": "string",
+            "title": "string",
+            "description": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "process_steps",
+      "props": {
+        "title": "string",
+        "subtitle": "string",
+        "items": [
+          {
+            "number": "string",
+            "title": "string",
+            "description": "string",
+            "icon": "icon"
+          }
+        ]
+      }
+    },
+    {
+      "type": "how_it_works",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "title": "string",
+            "description": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "before_after",
+      "props": {
+        "title": "string",
+        "beforeTitle": "string",
+        "beforeItems": "string[]",
+        "afterTitle": "string",
+        "afterItems": "string[]"
+      }
+    },
+    {
+      "type": "comparison_table",
+      "props": {
+        "columns": "string[]",
+        "rows": "string[][]"
+      }
+    },
+    {
+      "type": "comparison_cards",
+      "props": {
+        "left": {
+          "title": "string",
+          "items": "string[]"
+        },
+        "right": {
+          "title": "string",
+          "items": "string[]"
+        }
+      }
+    },
+    {
+      "type": "persona_cards",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "name": "string",
+            "description": "string",
+            "icon": "icon"
+          }
+        ]
+      }
+    },
+    {
+      "type": "use_cases",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "title": "string",
+            "description": "string",
+            "cta": {
+              "label": "string",
+              "action": "ctaAction"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "industries_grid",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "industry": "string",
+            "description": "string",
+            "icon": "icon"
+          }
+        ]
+      }
+    },
+    {
+      "type": "audience_segment_cards",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "segment": "string",
+            "title": "string",
+            "description": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "pain_points",
+      "props": {
+        "title": "string",
+        "items": "string[]"
+      }
+    },
+    {
+      "type": "solution_block",
+      "props": {
+        "title": "string",
+        "content": "string",
+        "benefits": "string[]"
+      }
+    },
+    {
+      "type": "objection_handler",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "objection": "string",
+            "response": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "faq",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "question": "string",
+            "answer": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "accordion",
+      "props": {
+        "items": [
+          {
+            "title": "string",
+            "content": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "support_contact_box",
+      "props": {
+        "title": "string",
+        "description": "string",
+        "phone": "string",
+        "email": "string"
+      }
+    },
+    {
+      "type": "trust_bar",
+      "props": {
+        "items": "string[]"
+      }
+    },
+    {
+      "type": "trust_badges",
+      "props": {
+        "items": [
+          {
+            "label": "string",
+            "icon": "icon"
+          }
+        ]
+      }
+    },
+    {
+      "type": "certifications",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "name": "string",
+            "issuer": "string",
+            "icon": "icon"
+          }
+        ]
+      }
+    },
+    {
+      "type": "compliance_badges",
+      "props": {
+        "items": [
+          {
+            "label": "string",
+            "description": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "guarantee_box",
+      "props": {
+        "title": "string",
+        "content": "string",
+        "icon": "icon"
+      }
+    },
+    {
+      "type": "risk_reversal",
+      "props": {
+        "title": "string",
+        "description": "string",
+        "items": "string[]"
+      }
+    },
+    {
+      "type": "testimonials",
+      "variants": ["grid", "carousel", "single"],
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "name": "string",
+            "role": "string",
+            "quote": "string",
+            "rating": "number"
+          }
+        ]
+      }
+    },
+    {
+      "type": "testimonial_single",
+      "props": {
+        "name": "string",
+        "role": "string",
+        "quote": "string",
+        "rating": "number",
+        "avatar": "string"
+      }
+    },
+    {
+      "type": "testimonial_video",
+      "props": {
+        "name": "string",
+        "role": "string",
+        "videoUrl": "string",
+        "quote": "string"
+      }
+    },
+    {
+      "type": "testimonial_carousel",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "name": "string",
+            "role": "string",
+            "quote": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "logo_cloud",
+      "props": {
+        "logos": "string[]"
+      }
+    },
+    {
+      "type": "client_logos",
+      "props": {
+        "title": "string",
+        "logos": [
+          {
+            "name": "string",
+            "src": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "press_logos",
+      "props": {
+        "title": "string",
+        "logos": [
+          {
+            "name": "string",
+            "src": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "social_mentions",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "platform": "string",
+            "text": "string",
+            "author": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "ratings_summary",
+      "props": {
+        "average": "number",
+        "count": "number",
+        "sources": [
+          {
+            "name": "string",
+            "rating": "number"
+          }
+        ]
+      }
+    },
+    {
+      "type": "review_cards",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "author": "string",
+            "quote": "string",
+            "rating": "number",
+            "source": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "case_studies",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "title": "string",
+            "summary": "string",
+            "result": "string",
+            "cta": {
+              "label": "string",
+              "action": "ctaAction"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "stats",
+      "props": {
+        "items": [
+          {
+            "value": "string",
+            "label": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "kpi_grid",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "label": "string",
+            "value": "string",
+            "delta": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "counter_cards",
+      "props": {
+        "items": [
+          {
+            "label": "string",
+            "value": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "progress_bar",
+      "props": {
+        "label": "string",
+        "value": "number",
+        "max": "number"
+      }
+    },
+    {
+      "type": "score_meter",
+      "props": {
+        "title": "string",
+        "score": "number",
+        "max": "number"
+      }
+    },
+    {
+      "type": "mini_chart",
+      "props": {
+        "title": "string",
+        "chartType": "line | bar | area",
+        "data": [
+          {
+            "label": "string",
+            "value": "number"
+          }
+        ]
+      }
+    },
+    {
+      "type": "conversion_stats",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "stage": "string",
+            "rate": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "pricing",
+      "props": {
+        "plans": [
+          {
+            "name": "string",
+            "price": "string",
+            "features": "string[]",
+            "highlight": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "type": "pricing_cards",
+      "props": {
+        "title": "string",
+        "plans": [
+          {
+            "name": "string",
+            "price": "string",
+            "period": "string",
+            "features": "string[]",
+            "cta": {
+              "label": "string",
+              "action": "ctaAction"
+            },
+            "highlight": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "type": "pricing_table",
+      "props": {
+        "columns": "string[]",
+        "rows": "string[][]"
+      }
+    },
+    {
+      "type": "pricing_toggle",
+      "props": {
+        "monthlyLabel": "string",
+        "yearlyLabel": "string",
+        "defaultMode": "monthly | yearly"
+      }
+    },
+    {
+      "type": "offer_stack",
+      "props": {
+        "title": "string",
+        "offers": [
+          {
+            "title": "string",
+            "description": "string",
+            "price": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "bundle_offer",
+      "props": {
+        "title": "string",
+        "items": "string[]",
+        "totalValue": "string",
+        "bundlePrice": "string"
+      }
+    },
+    {
+      "type": "promo_banner",
+      "props": {
+        "text": "string",
+        "code": "string",
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "coupon_box",
+      "props": {
+        "code": "string",
+        "description": "string"
+      }
+    },
+    {
+      "type": "limited_offer",
+      "props": {
+        "title": "string",
+        "description": "string",
+        "expiresAt": "string"
+      }
+    },
+    {
+      "type": "countdown",
+      "props": {
+        "endAt": "string",
+        "label": "string"
+      }
+    },
+    {
+      "type": "scarcity",
+      "props": {
+        "text": "string"
+      }
+    },
+    {
+      "type": "scarcity_notice",
+      "props": {
+        "title": "string",
+        "text": "string"
+      }
+    },
+    {
+      "type": "live_activity",
+      "props": {
+        "items": [
+          {
+            "text": "string",
+            "timeAgo": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "stock_counter",
+      "props": {
+        "label": "string",
+        "remaining": "number"
+      }
+    },
+    {
+      "type": "recent_signups",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "name": "string",
+            "location": "string",
+            "timeAgo": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "form",
+      "variants": ["stacked", "inline", "card"],
+      "props": {
+        "title": "string",
+        "submitLabel": "string",
+        "fields": [
+          {
+            "type": "formFieldType",
+            "name": "string",
+            "label": "string",
+            "required": "boolean",
+            "placeholder": "string",
+            "options": "string[]"
+          }
+        ],
+        "successMessage": "string"
+      }
+    },
+    {
+      "type": "inline_form",
+      "props": {
+        "submitLabel": "string",
+        "fields": [
+          {
+            "type": "formFieldType",
+            "name": "string",
+            "label": "string",
+            "required": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "type": "form_card",
+      "props": {
+        "title": "string",
+        "subtitle": "string",
+        "fields": [
+          {
+            "type": "formFieldType",
+            "name": "string",
+            "label": "string",
+            "required": "boolean"
+          }
+        ],
+        "submitLabel": "string"
+      }
+    },
+    {
+      "type": "form_split",
+      "props": {
+        "leftContent": "Component[]",
+        "rightForm": "Component"
+      }
+    },
+    {
+      "type": "floating_form",
+      "props": {
+        "title": "string",
+        "fields": [
+          {
+            "type": "formFieldType",
+            "name": "string",
+            "label": "string"
+          }
+        ],
+        "submitLabel": "string"
+      }
+    },
+    {
+      "type": "multi_step_form",
+      "props": {
+        "steps": [
+          {
+            "title": "string",
+            "fields": [
+              {
+                "type": "formFieldType",
+                "name": "string",
+                "label": "string",
+                "required": "boolean"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "quiz_form",
+      "props": {
+        "title": "string",
+        "questions": [
+          {
+            "question": "string",
+            "type": "radio | checkbox | select",
+            "options": "string[]"
+          }
+        ],
+        "submitLabel": "string"
+      }
+    },
+    {
+      "type": "survey_form",
+      "props": {
+        "title": "string",
+        "questions": [
+          {
+            "question": "string",
+            "type": "radio | checkbox | text",
+            "options": "string[]"
+          }
+        ]
+      }
+    },
+    {
+      "type": "calculator_form",
+      "props": {
+        "title": "string",
+        "inputs": [
+          {
+            "name": "string",
+            "label": "string",
+            "type": "number"
+          }
+        ],
+        "submitLabel": "string",
+        "resultLabel": "string"
+      }
+    },
+    {
+      "type": "booking_form",
+      "props": {
+        "title": "string",
+        "fields": [
+          {
+            "type": "text | email | tel | date | time",
+            "name": "string",
+            "label": "string"
+          }
+        ],
+        "submitLabel": "string"
+      }
+    },
+    {
+      "type": "contact_form",
+      "props": {
+        "title": "string",
+        "fields": [
+          {
+            "type": "formFieldType",
+            "name": "string",
+            "label": "string",
+            "required": "boolean"
+          }
+        ],
+        "submitLabel": "string"
+      }
+    },
+    {
+      "type": "newsletter_form",
+      "props": {
+        "title": "string",
+        "subtitle": "string",
+        "placeholder": "string",
+        "submitLabel": "string"
+      }
+    },
+    {
+      "type": "exit_popup_form",
+      "props": {
+        "title": "string",
+        "subtitle": "string",
+        "offerText": "string",
+        "fields": [
+          {
+            "type": "email",
+            "name": "email",
+            "label": "string"
+          }
+        ],
+        "submitLabel": "string"
+      }
+    },
+    {
+      "type": "segmented_choice",
+      "props": {
+        "title": "string",
+        "options": [
+          {
+            "label": "string",
+            "value": "string",
+            "description": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "quiz_step",
+      "props": {
+        "stepTitle": "string",
+        "question": "string",
+        "options": "string[]"
+      }
+    },
+    {
+      "type": "progress_indicator",
+      "props": {
+        "current": "number",
+        "total": "number",
+        "label": "string"
+      }
+    },
+    {
+      "type": "result_screen",
+      "props": {
+        "title": "string",
+        "subtitle": "string",
+        "summary": "string",
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "lead_score_display",
+      "props": {
+        "score": "number",
+        "max": "number",
+        "label": "string",
+        "description": "string"
+      }
+    },
+    {
+      "type": "cta",
+      "variants": ["banner", "card", "inline"],
+      "props": {
+        "headline": "string",
+        "subheadline": "string",
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "cta_banner",
+      "props": {
+        "headline": "string",
+        "subheadline": "string",
+        "primaryCta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "cta_card",
+      "props": {
+        "title": "string",
+        "description": "string",
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "cta_inline",
+      "props": {
+        "text": "string",
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "cta_split",
+      "props": {
+        "leftText": "string",
+        "rightCta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "cta_fullscreen",
+      "props": {
+        "headline": "string",
+        "subheadline": "string",
+        "backgroundMedia": {
+          "type": "image | video",
+          "src": "string"
+        },
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "sticky_cta",
+      "props": {
+        "label": "string",
+        "action": "ctaAction"
+      }
+    },
+    {
+      "type": "dual_cta",
+      "props": {
+        "primary": {
+          "label": "string",
+          "action": "ctaAction"
+        },
+        "secondary": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "floating_cta",
+      "props": {
+        "label": "string",
+        "action": "ctaAction",
+        "position": "bottom_right | bottom_left"
+      }
+    },
+    {
+      "type": "button",
+      "props": {
+        "label": "string",
+        "action": "ctaAction",
+        "variant": "buttonVariant",
+        "size": "sm | md | lg"
+      }
+    },
+    {
+      "type": "button_group",
+      "props": {
+        "buttons": [
+          {
+            "label": "string",
+            "action": "ctaAction",
+            "variant": "buttonVariant"
+          }
+        ]
+      }
+    },
+    {
+      "type": "badge",
+      "props": {
+        "label": "string",
+        "variant": "badgeVariant"
+      }
+    },
+    {
+      "type": "badge_group",
+      "props": {
+        "items": "string[]",
+        "variant": "badgeVariant"
+      }
+    },
+    {
+      "type": "chip",
+      "props": {
+        "label": "string",
+        "icon": "icon"
+      }
+    },
+    {
+      "type": "tag",
+      "props": {
+        "label": "string"
+      }
+    },
+    {
+      "type": "icon",
+      "props": {
+        "name": "icon",
+        "color": "themeColor",
+        "size": "iconSize"
+      }
+    },
+    {
+      "type": "icon_text",
+      "props": {
+        "icon": "icon",
+        "text": "string",
+        "iconPosition": "iconPosition"
+      }
+    },
+    {
+      "type": "card",
+      "props": {
+        "title": "string",
+        "description": "string",
+        "padding": "spacing",
+        "shadow": "shadow",
+        "radius": "radius"
+      }
+    },
+    {
+      "type": "info_card",
+      "props": {
+        "title": "string",
+        "content": "string",
+        "icon": "icon"
+      }
+    },
+    {
+      "type": "metric_card",
+      "props": {
+        "label": "string",
+        "value": "string",
+        "delta": "string"
+      }
+    },
+    {
+      "type": "profile_card",
+      "props": {
+        "name": "string",
+        "role": "string",
+        "bio": "string",
+        "avatar": "string"
+      }
+    },
+    {
+      "type": "team_grid",
+      "props": {
+        "title": "string",
+        "members": [
+          {
+            "name": "string",
+            "role": "string",
+            "avatar": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "avatar_group",
+      "props": {
+        "avatars": "string[]"
+      }
+    },
+    {
+      "type": "image",
+      "props": {
+        "src": "string",
+        "alt": "string",
+        "radius": "radius",
+        "shadow": "shadow",
+        "aspectRatio": "aspectRatio"
+      }
+    },
+    {
+      "type": "image_gallery",
+      "props": {
+        "images": [
+          {
+            "src": "string",
+            "alt": "string"
+          }
+        ],
+        "columns": "number"
+      }
+    },
+    {
+      "type": "logo_strip",
+      "props": {
+        "logos": [
+          {
+            "name": "string",
+            "src": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "video",
+      "props": {
+        "url": "string"
+      }
+    },
+    {
+      "type": "video_embed",
+      "props": {
+        "url": "string",
+        "title": "string"
+      }
+    },
+    {
+      "type": "background_video",
+      "props": {
+        "url": "string",
+        "overlay": "boolean"
+      }
+    },
+    {
+      "type": "audio_player",
+      "props": {
+        "url": "string",
+        "title": "string"
+      }
+    },
+    {
+      "type": "map_embed",
+      "props": {
+        "locationLabel": "string",
+        "embedUrl": "string"
+      }
+    },
+    {
+      "type": "calendar_embed",
+      "props": {
+        "embedUrl": "string",
+        "title": "string"
+      }
+    },
+    {
+      "type": "iframe_embed",
+      "props": {
+        "src": "string",
+        "title": "string",
+        "height": "string"
+      }
+    },
+    {
+      "type": "divider",
+      "props": {
+        "spacing": "spacing"
+      }
+    },
+    {
+      "type": "spacer",
+      "props": {
+        "size": "spacing"
+      }
+    },
+    {
+      "type": "tooltip",
+      "props": {
+        "label": "string",
+        "content": "string"
+      }
+    },
+    {
+      "type": "modal",
+      "props": {
+        "title": "string",
+        "content": "Component[]",
+        "size": "sm | md | lg | xl"
+      }
+    },
+    {
+      "type": "drawer",
+      "props": {
+        "title": "string",
+        "position": "left | right | bottom",
+        "content": "Component[]"
+      }
+    },
+    {
+      "type": "alert_box",
+      "props": {
+        "variant": "info | success | warning | error",
+        "title": "string",
+        "message": "string"
+      }
+    },
+    {
+      "type": "notification_bar",
+      "props": {
+        "variant": "info | success | warning | error",
+        "message": "string"
+      }
+    },
+    {
+      "type": "empty_state",
+      "props": {
+        "title": "string",
+        "description": "string",
+        "cta": {
+          "label": "string",
+          "action": "ctaAction"
+        }
+      }
+    },
+    {
+      "type": "loading_state",
+      "props": {
+        "label": "string"
+      }
+    },
+    {
+      "type": "search_bar",
+      "props": {
+        "placeholder": "string",
+        "submitLabel": "string"
+      }
+    },
+    {
+      "type": "filter_bar",
+      "props": {
+        "filters": [
+          {
+            "label": "string",
+            "options": "string[]"
+          }
+        ]
+      }
+    },
+    {
+      "type": "sort_dropdown",
+      "props": {
+        "label": "string",
+        "options": "string[]"
+      }
+    },
+    {
+      "type": "table",
+      "props": {
+        "columns": "string[]",
+        "rows": "string[][]"
+      }
+    },
+    {
+      "type": "data_list",
+      "props": {
+        "items": [
+          {
+            "title": "string",
+            "description": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "list_group",
+      "props": {
+        "items": "string[]"
+      }
+    },
+    {
+      "type": "numbered_list",
+      "props": {
+        "items": "string[]"
+      }
+    },
+    {
+      "type": "tabs",
+      "props": {
+        "items": [
+          {
+            "label": "string",
+            "content": "Component[]"
+          }
+        ]
+      }
+    },
+    {
+      "type": "pill_nav",
+      "props": {
+        "items": [
+          {
+            "label": "string",
+            "targetId": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "timeline_cards",
+      "props": {
+        "items": [
+          {
+            "date": "string",
+            "title": "string",
+            "description": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "milestones",
+      "props": {
+        "title": "string",
+        "items": [
+          {
+            "label": "string",
+            "value": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "roadmap",
+      "props": {
+        "phases": [
+          {
+            "title": "string",
+            "items": "string[]"
+          }
+        ]
+      }
+    },
+    {
+      "type": "stepper",
+      "props": {
+        "steps": [
+          {
+            "label": "string",
+            "status": "complete | current | upcoming"
+          }
+        ]
+      }
+    },
+    {
+      "type": "footer",
+      "props": {
+        "columns": [
+          {
+            "title": "string",
+            "links": [
+              {
+                "label": "string",
+                "href": "string"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "footer_simple",
+      "props": {
+        "copyright": "string",
+        "links": [
+          {
+            "label": "string",
+            "href": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "footer_extended",
+      "props": {
+        "logo": "string",
+        "description": "string",
+        "columns": [
+          {
+            "title": "string",
+            "links": [
+              {
+                "label": "string",
+                "href": "string"
+              }
+            ]
+          }
+        ],
+        "socialLinks": [
+          {
+            "platform": "string",
+            "href": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "legal_links",
+      "props": {
+        "items": [
+          {
+            "label": "string",
+            "href": "string"
+          }
+        ]
+      }
+    },
+    {
+      "type": "social_links",
+      "props": {
+        "items": [
+          {
+            "platform": "string",
+            "href": "string"
+          }
+        ]
+      }
+    }
+  ]
+}

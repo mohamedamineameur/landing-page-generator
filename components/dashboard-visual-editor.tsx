@@ -2412,6 +2412,64 @@ export function DashboardVisualEditor({
                       </label>
                     ) : null}
 
+                    {selectedSection.type === "navbar" && selectedSectionIndex !== null ? (
+                      <div className="grid gap-3 rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-sm font-semibold text-slate-900">Comportement du menu</p>
+                        <div className="grid gap-3">
+                          {[
+                            {
+                              key: "sticky",
+                              label: "Menu fixe (sticky)",
+                              enabledLabel: "Active",
+                              disabledLabel: "Desactive",
+                            },
+                            {
+                              key: "transparent",
+                              label: "Menu transparent",
+                              enabledLabel: "Active",
+                              disabledLabel: "Desactive",
+                            },
+                            {
+                              key: "showOnScroll",
+                              label: "Afficher au scroll",
+                              enabledLabel: "Active",
+                              disabledLabel: "Desactive",
+                            },
+                          ].map((item) => {
+                            const value = Boolean(
+                              getValueAtPath(draftPage, ["sections", selectedSectionIndex, "props", item.key]),
+                            );
+
+                            return (
+                              <label
+                                className="flex items-center justify-between gap-3"
+                                key={`navbar-option-${item.key}`}
+                              >
+                                <span className="text-sm font-semibold text-slate-800">{item.label}</span>
+                                <button
+                                  className={cx(
+                                    "inline-flex h-10 min-w-[130px] items-center justify-center rounded-full px-4 text-sm font-semibold transition",
+                                    value
+                                      ? "bg-emerald-100 text-emerald-700"
+                                      : "border border-slate-200 bg-white text-slate-700",
+                                  )}
+                                  onClick={() =>
+                                    setGenericValue(
+                                      ["sections", selectedSectionIndex, "props", item.key],
+                                      !value,
+                                    )
+                                  }
+                                  type="button"
+                                >
+                                  {value ? item.enabledLabel : item.disabledLabel}
+                                </button>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+
                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                       <button
                         className="inline-flex h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300"

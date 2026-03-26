@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useAuth } from "@/components/auth-provider";
@@ -77,12 +76,6 @@ export default function AuthPage() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.12),transparent_24%),linear-gradient(180deg,#f8fafc_0%,#ffffff_100%)] px-4 py-10">
       <div className="mx-auto grid min-h-[calc(100vh-80px)] w-full max-w-5xl items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-6">
-          <Link
-            className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50"
-            href="/"
-          >
-            Retour a l&apos;accueil
-          </Link>
           <div className="space-y-4">
             <span className="inline-flex rounded-full bg-slate-950 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-white">
               Funnel Workspace
@@ -143,7 +136,7 @@ export default function AuthPage() {
                 className="min-h-12 rounded-2xl border border-slate-200 bg-white px-4 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                 minLength={3}
                 onChange={(event) => setUsername(event.target.value)}
-                placeholder="amine"
+                placeholder="John Doe"
                 required
                 value={username}
               />
@@ -179,7 +172,7 @@ export default function AuthPage() {
                 className="min-h-12 rounded-2xl border border-slate-200 bg-white px-4 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                 minLength={8}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="minimum 8 caracteres"
+                placeholder="John Doe"
                 required
                 type="password"
                 value={password}
